@@ -12,21 +12,29 @@
 #define CLOCK_PIN 14
 
 int x = 1;
-String data;
+String indexHTMLString;
+String materializeCSSString;
+String styleCSSString;
+String materializeJSString;
+String syncerJSString;
 reaction rainbow;
 reaction ota;
 
 CRGB leds[NUM_LEDS];
 AsyncWebServer server(80);
 
-const char *ssid = "";
-const char *password = "";
+const char* ssid = "";
+const char* password = "";
 
-void notFound(AsyncWebServerRequest *request) {
+void
+notFound(AsyncWebServerRequest* request)
+{
     request->send(404, "text/html", "Nicht gefunden!");
 }
 
-void rainbowLED() {
+void
+rainbowLED()
+{
     if (x >= 256) {
         x = 1;
     } else {
@@ -36,10 +44,15 @@ void rainbowLED() {
     FastLED.show();
 }
 
+void
+otaHandle()
+{
+    ArduinoOTA.handle();
+}
 
-void otaHandle() { ArduinoOTA.handle(); }
-
-void start() {
+void
+start()
+{
     Serial.begin(9600);
     WiFi.begin(ssid, password);
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
@@ -57,26 +70,39 @@ void start() {
     Serial.print("IP Addresse: ");
     Serial.println(WiFi.localIP());
 
-    SPIFFS.begin();                           // Filesystem mounten
-    File f = SPIFFS.open("/test.html", "r");  // Datei zum lesen öffnen
-    if (!f) {
-        Serial.println("file open failed");
-    }
-    data = f.readString();  // Inhalt der Textdatei wird gelesen...
-    Serial.println("Inhalt der geöffneten Datei:");
-    Serial.println(data);  // ... und wieder ausgegeben
-    f.close();             // Wir schließen die Datei
+    SPIFFS.begin();                                                     // mount filesystem
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/html", data);
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {                    
+       request->send(SPIFFS, "/index.html", "text/html");
+        
     });
 
-    server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
+    server.on("/css/materialize.min.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/css/materialize.min.css", "text/css");
+       
+    });
+
+    server.on("/css/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/css/style.css", "text/css");
+       
+    });
+
+    server.on("/js/materialize.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
+       
+    });
+
+    server.on("/js/syncer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/js/syncer.js", "text/javascript");
+       
+    });
+
+    server.on("/on", HTTP_GET, [](AsyncWebServerRequest* request) {
         rainbow = app.repeat(10, rainbowLED);
         request->send(200, "text/html", "an");
     });
 
-    server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+    server.on("/off", HTTP_GET, [](AsyncWebServerRequest* request) {
         app.disable(rainbow);
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
