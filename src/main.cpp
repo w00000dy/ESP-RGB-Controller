@@ -174,6 +174,29 @@ void start() {
         }
     });
 
+    // music functionality
+    server.on("/music", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("weAreNumberOne", true)) {  // We are number one
+            response = request->getParam("weAreNumberOne", true)->value();
+            if (response == "true") {
+                // Start playing music
+                weAreNumberOneActive = true;
+                music = app.repeat(10, playWeAreNumberOne);
+                request->send(200, "text/plain", response);
+            } else if (response = "false") {
+                // Disable music
+                weAreNumberOneActive = false;
+                app.disable(music);
+                noTone(15);
+                request->send(200, "text/plain", response);
+            } else {
+                request->send(200, "text/plain", "Error! Invalid parameter. (weAreNumberOne)");
+            }
+        } else {
+            request->send(200, "text/plain", "Error! No parameters found.");
+        }
+    });
+
     // this is for synchronizing the buttons on multiple devices
     server.on("/sync", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("effect", true)) {
@@ -202,28 +225,6 @@ void start() {
             }
         } else {
             request->send(200, "text/plain", "Error! Invalid parameter. (sync)");
-        }
-    });
-
-    server.on("/music", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("weAreNumberOne", true)) {  // We are number one
-            response = request->getParam("weAreNumberOne", true)->value();
-            if (response == "true") {
-                // Start playing music
-                weAreNumberOneActive = true;
-                music = app.repeat(10, playWeAreNumberOne);
-                request->send(200, "text/plain", response);
-            } else if (response = "false") {
-                // Disable music
-                weAreNumberOneActive = false;
-                app.disable(music);
-                noTone(15);
-                request->send(200, "text/plain", response);
-            } else {
-                request->send(200, "text/plain", "Error! Invalid parameter. (weAreNumberOne)");
-            }
-        } else {
-            request->send(200, "text/plain", "Error! No parameters found.");
         }
     });
 
