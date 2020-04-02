@@ -184,9 +184,9 @@ void start() {
             if (response == "true") {
                 // Disable old effect
                 rainbowActive = false;
-                app.disable(rainbow);
+                app.free(rainbow);
                 fireActive = false;
-                app.disable(fire);
+                app.free(fire);
                 // Enable new effect
                 lightActive = true;
                 fill_solid(leds, NUM_LEDS, CRGB::White);
@@ -207,7 +207,7 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 fireActive = false;
-                app.disable(fire);
+                app.free(fire);
                 // Enable new effect
                 rainbowActive = true;
                 rainbow = app.repeat(10, rainbowLED);
@@ -215,7 +215,7 @@ void start() {
             } else if (response = "false") {
                 // Disable effect
                 rainbowActive = false;
-                app.disable(rainbow);
+                app.free(rainbow);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -228,7 +228,7 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 rainbowActive = false;
-                app.disable(rainbow);
+                app.free(rainbow);
                 // Enable new effect
                 fireActive = true;
                 fire = app.repeat(30, fireLED);
@@ -236,7 +236,7 @@ void start() {
             } else if (response = "false") {
                 // Disable effect
                 fireActive = false;
-                app.disable(fire);
+                app.free(fire);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -260,7 +260,7 @@ void start() {
             } else if (response = "false") {
                 // Disable music
                 weAreNumberOneActive = false;
-                app.disable(music);
+                app.free(music);
                 noTone(15);
                 request->send(200, "text/plain", response);
             } else {
