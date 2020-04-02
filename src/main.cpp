@@ -1,6 +1,5 @@
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 
-#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -11,12 +10,49 @@
 #define DATA_PIN 13
 #define CLOCK_PIN 14
 
+const int fn = 400;
+const int hn = 200;
+const int qn = 100;
+const int f5 = 698;
+const int c6 = 1047;
+const int b5 = 988;
+const int gh5 = 831;
+const int ch6 = 1109;
+const int dh6 = 1245;
+
+int WeAreNumberOne[] = {
+    f5, fn + hn,
+    c6, hn,
+    b5, qn,
+    c6, qn,
+    b5, qn,
+    c6, qn,
+    b5, hn,
+    c6, hn,
+    gh5, fn,
+    f5, fn + hn,
+    f5, hn,
+    gh5, hn,
+    c6, hn,
+    ch6, fn,
+    gh5, fn,
+    ch6, fn,
+    dh6, fn,
+    c6, hn,
+    ch6, hn,
+    c6, hn,
+    ch6, hn,
+    c6, fn};
+
 int x = 1;
+int i = 0;
+uint64 nextPlay = 0;
 bool lightActive = false;
 bool rainbowActive = false;
+bool weAreNumberOneActive = false;
 String response;
 reaction rainbow;
-reaction ota;
+reaction music;
 
 CRGB leds[NUM_LEDS];
 AsyncWebServer server(80);
@@ -38,14 +74,26 @@ void rainbowLED() {
     FastLED.show();
 }
 
-void otaHandle() {
-    ArduinoOTA.handle();
+// asynchronous music
+void playWeAreNumberOne() {
+    if (millis() >= nextPlay) {
+        if (i < (sizeof(WeAreNumberOne) / sizeof(int))) {
+            tone(15, WeAreNumberOne[i]);
+            nextPlay = millis() + WeAreNumberOne[i + 1];
+            i = i + 2;
+        } else {
+            noTone(15);
+            nextPlay = millis() + 1000;
+            i = 0;
+        }
+    }
 }
 
 void start() {
     Serial.begin(9600);
     WiFi.begin(ssid, password);
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
+    pinMode(15, OUTPUT);
 
     // Wait for connection
     while (WiFi.status() != WL_CONNECTED) {
@@ -53,9 +101,6 @@ void start() {
         Serial.print(".");
     }
     Serial.println("");
-
-    ArduinoOTA.begin();
-    ota = app.repeat(5, otaHandle);
 
     Serial.print("IP Addresse: ");
     Serial.println(WiFi.localIP());
@@ -87,7 +132,6 @@ void start() {
     server.on("/effect", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("light", true)) {  // light
             response = request->getParam("light", true)->value();
-            FastLED.show();
             if (response == "true") {
                 // Disable old effect
                 rainbowActive = false;
@@ -130,8 +174,9 @@ void start() {
         }
     });
 
+    // this is for synchronizing the buttons on multiple devices
     server.on("/sync", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("effect", true)) {  // light
+        if (request->hasParam("effect", true)) {
             response = request->getParam("effect", true)->value();
             if (response == "light") {
                 if (lightActive == true) {
@@ -145,8 +190,37 @@ void start() {
                 } else {
                     request->send(200, "text/plain", "false");
                 }
+            }
+        } else if (request->hasParam("music", true)) {
+            response = request->getParam("music", true)->value();
+            if (response == "weAreNumberOne") {
+                if (weAreNumberOneActive == true) {
+                    request->send(200, "text/plain", "true");
+                } else {
+                    request->send(200, "text/plain", "false");
+                }
+            }
+        } else {
+            request->send(200, "text/plain", "Error! Invalid parameter. (sync)");
+        }
+    });
+
+    server.on("/music", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("weAreNumberOne", true)) {  // We are number one
+            response = request->getParam("weAreNumberOne", true)->value();
+            if (response == "true") {
+                // Start playing music
+                weAreNumberOneActive = true;
+                music = app.repeat(10, playWeAreNumberOne);
+                request->send(200, "text/plain", response);
+            } else if (response = "false") {
+                // Disable music
+                weAreNumberOneActive = false;
+                app.disable(music);
+                noTone(15);
+                request->send(200, "text/plain", response);
             } else {
-                request->send(200, "text/plain", "Error! Invalid parameter. (effect)");
+                request->send(200, "text/plain", "Error! Invalid parameter. (weAreNumberOne)");
             }
         } else {
             request->send(200, "text/plain", "Error! No parameters found.");
