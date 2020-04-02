@@ -1,0 +1,30 @@
+.colorchange {
+    animation: colorchange 30s infinite;
+}
+
+@keyframes colorchange {
+    0% {
+        color: red;
+    }
+    15% {
+        color: orange;
+    }
+    20% {
+        color: yellow;
+    }
+    45% {
+        color: green;
+    }
+    60% {
+        color: turquoise;
+    }
+    75% {
+        color: blue;
+    }
+    90% {
+        color: purple;
+    }
+    100% {
+        color: red;
+    }
+}
