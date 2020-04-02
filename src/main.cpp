@@ -24,15 +24,11 @@ AsyncWebServer server(80);
 const char* ssid = "";
 const char* password = "";
 
-void
-notFound(AsyncWebServerRequest* request)
-{
+void notFound(AsyncWebServerRequest* request) {
     request->send(404, "text/html", "Nicht gefunden!");
 }
 
-void
-rainbowLED()
-{
+void rainbowLED() {
     if (x >= 256) {
         x = 1;
     } else {
@@ -42,15 +38,11 @@ rainbowLED()
     FastLED.show();
 }
 
-void
-otaHandle()
-{
+void otaHandle() {
     ArduinoOTA.handle();
 }
 
-void
-start()
-{
+void start() {
     Serial.begin(9600);
     WiFi.begin(ssid, password);
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
@@ -68,7 +60,7 @@ start()
     Serial.print("IP Addresse: ");
     Serial.println(WiFi.localIP());
 
-    SPIFFS.begin(); // mount filesystem
+    SPIFFS.begin();  // mount filesystem
 
     // main web page
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -93,7 +85,7 @@ start()
 
     // web controller for rgb strip
     server.on("/effect", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("light", true)) { // light
+        if (request->hasParam("light", true)) {  // light
             response = request->getParam("light", true)->value();
             FastLED.show();
             if (response == "true") {
@@ -114,7 +106,7 @@ start()
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (light)");
             }
-        } else if (request->hasParam("rainbow", true)) { // rainbow
+        } else if (request->hasParam("rainbow", true)) {  // rainbow
             response = request->getParam("rainbow", true)->value();
             if (response == "true") {
                 // Disable old effect
@@ -139,7 +131,7 @@ start()
     });
 
     server.on("/sync", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("effect", true)) { // light
+        if (request->hasParam("effect", true)) {  // light
             response = request->getParam("effect", true)->value();
             if (response == "light") {
                 if (lightActive == true) {
