@@ -1,10 +1,11 @@
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 
+#include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
 #include <FastLED.h>
-#include <Reactduino.h>
 
 #define NUM_LEDS 88
 #define DATA_PIN 13
@@ -44,8 +45,9 @@ int WeAreNumberOne[] = {
     ch6, hn,
     c6, fn};
 
-int x = 1;
-int i = 0;
+uint8 x = 1;
+uint i = 0;
+ulong nextShow = 0;
 ulong nextPlay = 0;
 bool lightActive = false;
 bool rainbowActive = false;
@@ -53,15 +55,11 @@ bool fireActive = false;
 bool weAreNumberOneActive = false;
 String response;
 String json;
-reaction rainbow;
-reaction fire;
-reaction music;
 
 CRGB leds[NUM_LEDS];
 AsyncWebServer server(80);
-
-const char* ssid = "";
-const char* password = "";
+DNSServer dnsServer;
+AsyncWiFiManager wifiManager(&server, &dnsServer);
 
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
@@ -110,6 +108,7 @@ void fireLED() {
     FastLED.show();
 }
 
+// rainbow effect
 void rainbowLED() {
     if (x >= 256) {
         x = 1;
@@ -122,34 +121,47 @@ void rainbowLED() {
 
 // asynchronous music
 void playWeAreNumberOne() {
+    if (i < (sizeof(WeAreNumberOne) / sizeof(int))) {
+        tone(15, WeAreNumberOne[i]);
+        nextPlay = millis() + WeAreNumberOne[i + 1];
+        i = i + 2;
+    } else {
+        noTone(15);
+        nextPlay = millis() + 1000;
+        i = 0;
+    }
+}
+
+void handleAsync() {
+    // Effects
+    if (millis() >= nextShow) {
+        if (rainbowActive == true) {
+            rainbowLED();
+            nextShow = millis() + 10;
+        }
+        if (fireActive == true) {
+            fireLED();
+            nextShow = millis() + 30;
+        }
+    }
+    // Music
     if (millis() >= nextPlay) {
-        if (i < (sizeof(WeAreNumberOne) / sizeof(int))) {
-            tone(15, WeAreNumberOne[i]);
-            nextPlay = millis() + WeAreNumberOne[i + 1];
-            i = i + 2;
-        } else {
-            noTone(15);
-            nextPlay = millis() + 1000;
-            i = 0;
+        if (weAreNumberOneActive == true) {
+            playWeAreNumberOne();
         }
     }
 }
 
 void notFound(AsyncWebServerRequest* request) {
-    request->send(404, "text/html", "Nicht gefunden!");
+    request->send(200, "text/html", "Error! Not found.");
 }
 
-void start() {
+void setup() {
     Serial.begin(9600);
-    WiFi.begin(ssid, password);
+    wifiManager.autoConnect("ESP-RGB-setup");
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
     pinMode(15, OUTPUT);
 
-    // Wait for connection
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
     Serial.println("");
 
     Serial.print("IP Addresse: ");
@@ -185,9 +197,7 @@ void start() {
             if (response == "true") {
                 // Disable old effect
                 rainbowActive = false;
-                app.disable(rainbow);
                 fireActive = false;
-                app.disable(fire);
                 // Enable new effect
                 lightActive = true;
                 fill_solid(leds, NUM_LEDS, CRGB::White);
@@ -208,15 +218,12 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 fireActive = false;
-                app.disable(fire);
                 // Enable new effect
                 rainbowActive = true;
-                rainbow = app.repeat(10, rainbowLED);
                 request->send(200, "text/plain", response);
             } else if (response = "false") {
                 // Disable effect
                 rainbowActive = false;
-                app.disable(rainbow);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -229,15 +236,12 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 rainbowActive = false;
-                app.disable(rainbow);
                 // Enable new effect
                 fireActive = true;
-                fire = app.repeat(30, fireLED);
                 request->send(200, "text/plain", response);
             } else if (response = "false") {
                 // Disable effect
                 fireActive = false;
-                app.disable(fire);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -256,15 +260,10 @@ void start() {
             if (response == "true") {
                 // Start playing music
                 weAreNumberOneActive = true;
-                music = app.onTick(playWeAreNumberOne);
-                // this is for fixing a bug from reactduino
-                app.disable(music);
-                music = app.onTick(playWeAreNumberOne);
                 request->send(200, "text/plain", response);
             } else if (response = "false") {
                 // Disable music
                 weAreNumberOneActive = false;
-                app.disable(music);
                 noTone(15);
                 request->send(200, "text/plain", response);
             } else {
@@ -307,4 +306,6 @@ void start() {
     server.begin();
 }
 
-Reactduino app(start);
+void loop() {
+    handleAsync();
+}
