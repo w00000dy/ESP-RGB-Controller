@@ -164,7 +164,7 @@ void setup() {
 
     Serial.println("");
 
-    Serial.print("IP Addresse: ");
+    Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
 
     SPIFFS.begin();  // mount filesystem
