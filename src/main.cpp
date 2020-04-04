@@ -46,12 +46,13 @@ int WeAreNumberOne[] = {
 
 int x = 1;
 int i = 0;
-uint64 nextPlay = 0;
+ulong nextPlay = 0;
 bool lightActive = false;
 bool rainbowActive = false;
 bool fireActive = false;
 bool weAreNumberOneActive = false;
 String response;
+String json;
 reaction rainbow;
 reaction fire;
 reaction music;
@@ -184,9 +185,9 @@ void start() {
             if (response == "true") {
                 // Disable old effect
                 rainbowActive = false;
-                app.free(rainbow);
+                app.disable(rainbow);
                 fireActive = false;
-                app.free(fire);
+                app.disable(fire);
                 // Enable new effect
                 lightActive = true;
                 fill_solid(leds, NUM_LEDS, CRGB::White);
@@ -207,7 +208,7 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 fireActive = false;
-                app.free(fire);
+                app.disable(fire);
                 // Enable new effect
                 rainbowActive = true;
                 rainbow = app.repeat(10, rainbowLED);
@@ -215,7 +216,7 @@ void start() {
             } else if (response = "false") {
                 // Disable effect
                 rainbowActive = false;
-                app.free(rainbow);
+                app.disable(rainbow);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -228,7 +229,7 @@ void start() {
                 // Disable old effect
                 lightActive = false;
                 rainbowActive = false;
-                app.free(rainbow);
+                app.disable(rainbow);
                 // Enable new effect
                 fireActive = true;
                 fire = app.repeat(30, fireLED);
@@ -236,7 +237,7 @@ void start() {
             } else if (response = "false") {
                 // Disable effect
                 fireActive = false;
-                app.free(fire);
+                app.disable(fire);
                 fill_solid(leds, NUM_LEDS, CRGB::Black);
                 FastLED.show();
                 request->send(200, "text/plain", response);
@@ -255,12 +256,15 @@ void start() {
             if (response == "true") {
                 // Start playing music
                 weAreNumberOneActive = true;
-                music = app.repeat(10, playWeAreNumberOne);
+                music = app.onTick(playWeAreNumberOne);
+                // this is for fixing a bug from reactduino
+                app.disable(music);
+                music = app.onTick(playWeAreNumberOne);
                 request->send(200, "text/plain", response);
             } else if (response = "false") {
                 // Disable music
                 weAreNumberOneActive = false;
-                app.free(music);
+                app.disable(music);
                 noTone(15);
                 request->send(200, "text/plain", response);
             } else {
@@ -272,40 +276,30 @@ void start() {
     });
 
     // this is for synchronizing the buttons on multiple devices
-    server.on("/sync", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("effect", true)) {
-            response = request->getParam("effect", true)->value();
-            if (response == "light") {
-                if (lightActive == true) {
-                    request->send(200, "text/plain", "true");
-                } else {
-                    request->send(200, "text/plain", "false");
-                }
-            } else if (response == "rainbow") {
-                if (rainbowActive == true) {
-                    request->send(200, "text/plain", "true");
-                } else {
-                    request->send(200, "text/plain", "false");
-                }
-            } else if (response == "fire") {
-                if (fireActive == true) {
-                    request->send(200, "text/plain", "true");
-                } else {
-                    request->send(200, "text/plain", "false");
-                }
-            }
-        } else if (request->hasParam("music", true)) {
-            response = request->getParam("music", true)->value();
-            if (response == "weAreNumberOne") {
-                if (weAreNumberOneActive == true) {
-                    request->send(200, "text/plain", "true");
-                } else {
-                    request->send(200, "text/plain", "false");
-                }
-            }
+    server.on("/sync", HTTP_GET, [](AsyncWebServerRequest* request) {
+        json = "[";
+        if (lightActive == true) {
+            json += "\"true\"";
         } else {
-            request->send(200, "text/plain", "Error! Invalid parameter. (sync)");
+            json += "\"false\"";
         }
+        if (rainbowActive == true) {
+            json += ",\"true\"";
+        } else {
+            json += ",\"false\"";
+        }
+        if (fireActive == true) {
+            json += ",\"true\"";
+        } else {
+            json += ",\"false\"";
+        }
+        if (weAreNumberOneActive == true) {
+            json += ",\"true\"";
+        } else {
+            json += ",\"false\"";
+        }
+        json += "]";
+        request->send(200, "application/json", json);
     });
 
     server.onNotFound(notFound);

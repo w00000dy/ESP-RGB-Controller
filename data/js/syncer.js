@@ -1,28 +1,31 @@
-document.getElementById("light").addEventListener("click", light);
-document.getElementById("rainbow").addEventListener("click", rainbow);
-document.getElementById("fire").addEventListener("click", fire);
-document.getElementById("weAreNumberOne").addEventListener("click", weAreNumberOne);
+document.getElementById("switch0").addEventListener("click", light); // Light
+document.getElementById("switch1").addEventListener("click", rainbow);  // Rainbow
+document.getElementById("switch2").addEventListener("click", fire); // Fire
+document.getElementById("switch3").addEventListener("click", weAreNumberOne); // We are number one
 
 function light() {
-    document.getElementById('rainbow').checked = false;
-    document.getElementById('fire').checked = false;
-    sendData("light");
+    document.getElementById('switch1').checked = false;
+    document.getElementById('switch2').checked = false;
+    var value = document.getElementById("switch0").checked;
+    sendData("light", value);
 }
 
 function rainbow() {
-    document.getElementById('light').checked = false;
-    document.getElementById('fire').checked = false;
-    sendData("rainbow");
+    document.getElementById('switch0').checked = false;
+    document.getElementById('switch2').checked = false;
+    var value = document.getElementById("switch1").checked;
+    sendData("rainbow", value);
 }
 
 function fire() {
-    document.getElementById('light').checked = false;
-    document.getElementById('rainbow').checked = false;
-    sendData("fire");
+    document.getElementById('switch0').checked = false;
+    document.getElementById('switch1').checked = false;
+    var value = document.getElementById("switch2").checked;
+    sendData("fire", value);
 }
 
 function weAreNumberOne() {
-    var data = document.getElementById("weAreNumberOne").checked;
+    var data = document.getElementById("switch3").checked;
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", '/music', true);
@@ -36,9 +39,7 @@ function weAreNumberOne() {
     xhr.send("weAreNumberOne=" + data);
 }
 
-function sendData(effect) {
-    var data = document.getElementById(effect).checked;
-
+function sendData(effect, data) {
     console.log(effect + ": " + data);
 
     var xhr = new XMLHttpRequest();
@@ -53,80 +54,29 @@ function sendData(effect) {
     xhr.send(effect + "=" + data);
 }
 
-function syncLight() {
+// this is for synchronizing the buttons on multiple devices
+function sync() {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/sync', true);
+    xhr.open("GET", '/sync', true);
     //Send the proper header information along with the request
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (xhr.response == "true") {
-                document.getElementById('light').checked = true;
+            var data = JSON.parse(xhr.response);
+            for (let index = 0; index < data.length; index++) {
+                const element = data[index];
+                console.log("Switch" + index + ": " + element);
+                if (element == "true") {
+                    document.getElementById('switch' + String(index)).checked = true;
+                }
+                else {
+                    document.getElementById('switch' + String(index)).checked = false;
+                }
             }
-            else {
-                document.getElementById('light').checked = false;
-            }
-            syncRainbow();
+            setTimeout(sync, 1000);
         }
     }
-    xhr.send("effect=light");
+    xhr.send();
 }
 
-function syncRainbow() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/sync', true);
-    //Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (xhr.response == "true") {
-                document.getElementById('rainbow').checked = true;
-            }
-            else {
-                document.getElementById('rainbow').checked = false;
-            }
-            syncFire();
-        }
-    }
-    xhr.send("effect=rainbow");
-}
-
-function syncFire() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/sync', true);
-    //Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (xhr.response == "true") {
-                document.getElementById('fire').checked = true;
-            }
-            else {
-                document.getElementById('fire').checked = false;
-            }
-            syncWeAreNumberOne();
-        }
-    }
-    xhr.send("effect=fire");
-}
-
-function syncWeAreNumberOne() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/sync', true);
-    //Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (xhr.response == "true") {
-                document.getElementById('weAreNumberOne').checked = true;
-            }
-            else {
-                document.getElementById('weAreNumberOne').checked = false;
-            }
-            setTimeout(syncLight, 1000);
-        }
-    }
-    xhr.send("music=weAreNumberOne");
-}
-
-syncLight();
+sync();
