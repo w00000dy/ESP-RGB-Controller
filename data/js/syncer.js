@@ -65,7 +65,6 @@ function sync() {
             var data = JSON.parse(xhr.response);
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                console.log("Switch" + index + ": " + element);
                 if (element == "true") {
                     document.getElementById('switch' + String(index)).checked = true;
                 }
