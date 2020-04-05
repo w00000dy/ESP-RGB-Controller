@@ -18,5 +18,13 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 - ESP8266 boards (like NodeMCU) ✅
 - ESP32 boards ❔
 
-## Images
+## 🖼️ Images
 <img src="https://github.com/WoodyLetsCode/ESP-RGB-Controller/raw/master/iphone-xs-with-macbook-air-in-the-background.jpg" width="50%"><img src="https://github.com/WoodyLetsCode/ESP-RGB-Controller/raw/master/ipad-pro-on-white-table.jpg" width="50%">
+
+## 📒 Used libraries
+- <a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a>
+- <a href="https://github.com/FastLED/FastLED">FastLED</a>
+- <a href="https://github.com/alanswx/ESPAsyncWiFiManager">AsyncWiFiManager</a>
+
+## ✌️ Credits
+Thanks to all contributors and creators of the libraries that i used!
