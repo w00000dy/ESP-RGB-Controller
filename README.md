@@ -1,8 +1,8 @@
+# ESP-RGB-Controller
 <p align="center"><img src="https://raw.githubusercontent.com/WoodyLetsCode/ESP-RGB-Controller/wifi-setup-captive-portal/ESP-RGB-Controller.png"></p>
-## Test
 
-### test
+## About this project
+blah blah
 
-#### lol
-Test Hallo
-<h1>Test</h1>
+## Features
+blah blah
