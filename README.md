@@ -25,6 +25,21 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 You can find a full installation and setup guide in the <a href="https://github.com/WoodyLetsCode/ESP-RGB-Controller/wiki">Wiki</a>.
  - <a href="https://github.com/WoodyLetsCode/ESP-RGB-Controller/wiki/Installation">Installation</a>
  - <a href="https://github.com/WoodyLetsCode/ESP-RGB-Controller/wiki/Setup">Setup</a>
+ 
+ ## 📍 Pin Layout
+The following table shows how to connect your hardware.
+
+|    Hardware    	| GPIO 	| NodeMCU 	|
+|:--------------:	|:----:	|:-------:	|
+|  WS2801 (Data) 	|  13  	|    D7   	|
+| WS2801 (Clock) 	|  14  	|    D5   	|
+|     Buzzer     	|  15  	|    D8   	|
+|    Button 1    	|  16  	|    D0   	|
+| Button 1 (LED) 	|   0  	|    D3   	|
+|    Button 2    	|   5  	|    D1   	|
+| Button 2 (LED) 	|   2  	|    D4   	|
+|    Button 3    	|   4  	|    D2   	|
+| Button 3 (LED) 	|  12  	|    D6   	|
 
 ## 📒 Used libraries
 - <a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a>
