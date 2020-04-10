@@ -23,6 +23,7 @@ const int ch6 = 1109;
 const int dh6 = 1245;
 
 int WeAreNumberOne[] = {
+    0, 0,
     f5, fn + hn,
     c6, hn,
     b5, qn,
@@ -48,9 +49,13 @@ int WeAreNumberOne[] = {
 
 uint8 x = 1;
 uint i = 0;
+uint8 red;
+uint8 green;
+uint8 blue;
 ulong nextShow = 0;
 ulong nextPlay = 0;
 bool lightActive = false;
+bool colorActive = false;
 bool rainbowActive = false;
 bool fireActive = false;
 bool weAreNumberOneActive = false;
@@ -160,7 +165,7 @@ void notFound(AsyncWebServerRequest* request) {
 
 void setup() {
     Serial.begin(9600);
-    strcat(HOSTNAME, String(ESP.getChipId()).c_str() );
+    strcat(HOSTNAME, String(ESP.getChipId()).c_str());
     wifi_station_set_hostname(const_cast<char*>(HOSTNAME));
     wifiManager.autoConnect("ESP-RGB-setup");
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
@@ -208,6 +213,7 @@ void setup() {
             response = request->getParam("light", true)->value();
             if (response == "true") {
                 // Disable old effect
+                colorActive = false;
                 rainbowActive = false;
                 fireActive = false;
                 // Enable new effect
@@ -224,11 +230,36 @@ void setup() {
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (light)");
             }
+        } else if (request->hasParam("color", true)) {  // color
+            response = request->getParam("color", true)->value();
+            if (response == "false") {
+                // Disable effect
+                colorActive = false;
+                fill_solid(leds, NUM_LEDS, CRGB::Black);
+                FastLED.show();
+                request->send(200, "text/plain", response);
+            } else {
+                if (request->hasParam("red", true) && request->hasParam("green", true) && request->hasParam("blue", true)) {
+                    red = request->getParam("red", true)->value().toInt();
+                    green = request->getParam("green", true)->value().toInt();
+                    blue = request->getParam("blue", true)->value().toInt();
+                    // Disable old effect
+                    lightActive = false;
+                    rainbowActive = false;
+                    fireActive = false;
+                    // Enable new effect
+                    colorActive = true;
+                    fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
+                    FastLED.show();
+                    request->send(200, "text/plain", response);
+                }
+            }
         } else if (request->hasParam("rainbow", true)) {  // rainbow
             response = request->getParam("rainbow", true)->value();
             if (response == "true") {
                 // Disable old effect
                 lightActive = false;
+                colorActive = false;
                 fireActive = false;
                 // Enable new effect
                 rainbowActive = true;
@@ -247,6 +278,7 @@ void setup() {
             if (response == "true") {
                 // Disable old effect
                 lightActive = false;
+                colorActive = false;
                 rainbowActive = false;
                 // Enable new effect
                 fireActive = true;
@@ -293,6 +325,11 @@ void setup() {
             json += "\"true\"";
         } else {
             json += "\"false\"";
+        }
+        if (colorActive == true) {
+            json += ",\"true\"";
+        } else {
+            json += ",\"false\"";
         }
         if (rainbowActive == true) {
             json += ",\"true\"";
