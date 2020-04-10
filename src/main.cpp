@@ -1,5 +1,6 @@
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 
+#include <ArduinoOTA.h>
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
@@ -60,6 +61,7 @@ CRGB leds[NUM_LEDS];
 AsyncWebServer server(80);
 DNSServer dnsServer;
 AsyncWiFiManager wifiManager(&server, &dnsServer);
+char HOSTNAME[] = "ESP-RGB-Controller-";
 
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
@@ -158,6 +160,8 @@ void notFound(AsyncWebServerRequest* request) {
 
 void setup() {
     Serial.begin(9600);
+    strcat(HOSTNAME, String(ESP.getChipId()).c_str() );
+    wifi_station_set_hostname(const_cast<char*>(HOSTNAME));
     wifiManager.autoConnect("ESP-RGB-setup");
     FastLED.addLeds<WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
     pinMode(15, OUTPUT);
@@ -166,6 +170,14 @@ void setup() {
 
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+    Serial.print("Hostname: ");
+    Serial.println(HOSTNAME);
+    Serial.print("Chip-ID: ");
+    Serial.println(ESP.getChipId());
+
+    // OTA
+    ArduinoOTA.setHostname(HOSTNAME);
+    ArduinoOTA.begin();
 
     SPIFFS.begin();  // mount filesystem
 
@@ -307,5 +319,6 @@ void setup() {
 }
 
 void loop() {
+    ArduinoOTA.handle();
     handleAsync();
 }
