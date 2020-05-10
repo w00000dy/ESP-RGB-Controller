@@ -9,10 +9,11 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 - Web-GUI ✅
 - Buzzer support ✅
 - Asynchronous ✅
+- OTA-Updates ✅
+
 ### Future releases:
 - Multi-Platform software (Windows, Linux, Mac) 🔜
 - Custom PCB 🔜
-- OTA-Updates 🔜
 
 ## 💾 Supported platforms
 - ESP8266 boards (like NodeMCU) ✅
@@ -45,6 +46,7 @@ The following table shows how to connect your hardware.
 - <a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a>
 - <a href="https://github.com/FastLED/FastLED">FastLED</a>
 - <a href="https://github.com/alanswx/ESPAsyncWiFiManager">AsyncWiFiManager</a>
+- <a href="https://github.com/bblanchon/ArduinoJson">ArduinoJson</a>
 
 ## ✌️ Credits
 Thanks to all contributors and creators of the libraries that i used!
