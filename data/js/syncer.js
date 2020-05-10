@@ -3,7 +3,8 @@ document.getElementById("switch1").addEventListener("click", color); // Color
 document.getElementById("color").addEventListener("change", colorChange); // Color
 document.getElementById("switch2").addEventListener("click", rainbow);  // Rainbow
 document.getElementById("switch3").addEventListener("click", fire); // Fire
-document.getElementById("switch4").addEventListener("click", weAreNumberOne); // We are number one
+document.getElementById("switch4").addEventListener("click", random); // Random
+document.getElementById("switch5").addEventListener("click", weAreNumberOne); // We are number one
 
 function light() {
     document.getElementById('switch1').checked = false;
@@ -71,8 +72,16 @@ function fire() {
     sendData("fire", value);
 }
 
+function random() {
+    document.getElementById('switch0').checked = false;
+    document.getElementById('switch1').checked = false;
+    document.getElementById('switch2').checked = false;
+    var value = document.getElementById("switch4").checked;
+    sendData("random", value);
+}
+
 function weAreNumberOne() {
-    var data = document.getElementById("switch4").checked;
+    var data = document.getElementById("switch5").checked;
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", '/music', true);
