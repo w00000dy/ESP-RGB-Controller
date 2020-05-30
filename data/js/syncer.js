@@ -128,19 +128,17 @@ function sync() {
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            var data = JSON.parse(xhr.response);
-            console.log(data);
-            console.log(data.length);
+            data = JSON.parse(xhr.response);
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                if (element == "true") {
-                    document.getElementById('switch' + String(index)).checked = true;
-                }
-                else {
-                    document.getElementById('switch' + String(index)).checked = false;
+                if (index == 1) {
+                    console.log(element.active);
+                    document.getElementById('switch' + String(index)).checked = element.active;
+                } else {
+                    document.getElementById('switch' + String(index)).checked = element;
                 }
             }
-            setTimeout(sync, 5000);
+            setTimeout(sync, 1000);
         }
     }
     xhr.send();

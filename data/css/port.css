@@ -1,3 +1,25 @@
+.Fire {
+    animation: Fire 10s infinite;
+}
+
+@keyframes Fire {
+    0% {
+        color: red;
+    }
+
+    33% {
+        color: orange;
+    }
+
+    66% {
+        color: yellow;
+    }
+    100% {
+        color: red;
+    }
+
+   
+}
 .colorchangeFast {
     animation: colorchangeFast 10s infinite;
 }

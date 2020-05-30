@@ -530,7 +530,7 @@ void setup() {
         DynamicJsonDocument doc(1024);
 
         doc[0] = lightActive;
-        doc[1]["acitve"] = colorActive;
+        doc[1]["active"] = colorActive;
         doc[1]["red"] = leds[1].r;
         doc[1]["green"] = leds[1].g;
         doc[1]["blue"] = leds[1].b;
