@@ -22,49 +22,12 @@
 #define CLOCK_PIN 14
 
 #define EFFECT_DISABLE -1
-#define MUSIC_DISABLE -2
 #define EFFECT_LIGHT 0
 #define EFFECT_COLOR 1
 #define EFFECT_RAINBOW 2
 #define EFFECT_FIRE 3
 #define EFFECT_RANDOM 4
 #define NOTIFICATION_MESSAGE 5
-#define MUSIC_WE_ARE_NUMBER_ONE 6
-
-const int fn = 400;
-const int hn = 200;
-const int qn = 100;
-const int f5 = 698;
-const int c6 = 1047;
-const int b5 = 988;
-const int gh5 = 831;
-const int ch6 = 1109;
-const int dh6 = 1245;
-
-int WeAreNumberOne[] = {
-    0, 0,
-    f5, fn + hn,
-    c6, hn,
-    b5, qn,
-    c6, qn,
-    b5, qn,
-    c6, qn,
-    b5, hn,
-    c6, hn,
-    gh5, fn,
-    f5, fn + hn,
-    f5, hn,
-    gh5, hn,
-    c6, hn,
-    ch6, fn,
-    gh5, fn,
-    ch6, fn,
-    dh6, fn,
-    c6, hn,
-    ch6, hn,
-    c6, hn,
-    ch6, hn,
-    c6, fn};
 
 uint8 x = 1;
 uint i = 0;
@@ -85,7 +48,7 @@ bool notificationMessage = false;
 bool weAreNumberOneActive = false;
 String response;
 String json;
-
+int websitewahl;
 CRGB leds[MAX_LEDS];
 AsyncWebServer server(80);
 DNSServer dnsServer;
@@ -156,20 +119,6 @@ int getActive() {
         return NOTIFICATION_MESSAGE;
     } else {
         return EFFECT_DISABLE;
-    }
-}
-
-void setMusic(int8 music) {
-    weAreNumberOneActive = false;
-    switch (music) {
-        case MUSIC_WE_ARE_NUMBER_ONE:
-            weAreNumberOneActive = true;
-            Serial.println("Playing we are numer one");
-            break;
-
-        default:
-            Serial.println("Disable music");
-            break;
     }
 }
 
@@ -244,19 +193,6 @@ void randomLED() {
     FastLED.show();
 }
 
-// asynchronous music
-void playWeAreNumberOne() {
-    if (i < (sizeof(WeAreNumberOne) / sizeof(int))) {
-        tone(15, WeAreNumberOne[i]);
-        nextPlay = millis() + WeAreNumberOne[i + 1];
-        i = i + 2;
-    } else {
-        noTone(15);
-        nextPlay = millis() + 1000;
-        i = 0;
-    }
-}
-
 void onMessage() {
     if (count >= 44) {
         leds[0] = CRGB::Black;
@@ -301,6 +237,18 @@ void setup() {
         file.print(25);
         NUM_LEDS = 25;
     }
+    if (SPIFFS.exists("/settings/Theme.txt") == true) {
+        File file = SPIFFS.open("/settings/Theme.txt", "r");
+        String data = file.readString();
+        websitewahl = data.toInt();
+        Serial.println("Settings found.");
+        Serial.print("Choice: ");
+        Serial.println(websitewahl);
+    } else {
+        Serial.println("No settings found. Generating files...");
+        File file = SPIFFS.open("/settings/Theme.txt", "w");
+        file.print(0);
+    }
     Serial.print("NUM_LEDS: ");
     Serial.println(NUM_LEDS);
     // Set hostname from chipId
@@ -335,28 +283,59 @@ void setup() {
     //    \  /\  /    |  __/ | |_) | \__ \ | | | |_  |  __/
     //     \/  \/      \___| |_.__/  |___/ |_|  \__|  \___|
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/index.html", "text/html");
-    });
+    if (websitewahl == 0) {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/index.html", "text/html");
+        });
 
-    server.on("/css/materialize.min.css", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/css/materialize.min.css", "text/css");
+        server.on("/css/materialize.min.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/css/materialize.min.css", "text/css");
+        });
+
+        server.on("/js/syncer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/syncer.js", "text/javascript");
+        });
+
+        server.on("/js/materialize.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
+        });
+
+    } else if (websitewahl == 1) {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/port.html", "text/html");
+        });
+
+        server.on("/Farben", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/farbe.html", "text/html");
+        });
+
+        server.on("/Modi", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/modi.html", "text/html");
+        });
+
+        server.on("/js/aendern.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/aendern.js", "text/javascript");
+        });
+
+        server.on("/js/abfragen.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/abfragen.js", "text/javascript");
+        });
+
+        server.on("/js/abfragen2.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/abfragen2.js", "text/javascript");
+        });
+
+        server.on("/css/port.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/css/port.css", "text/css");
+        });
+    }
+
+    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/settings.html", "text/html");
     });
 
     server.on("/css/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/css/style.css", "text/css");
-    });
-
-    server.on("/js/materialize.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
-    });
-
-    server.on("/js/syncer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/js/syncer.js", "text/javascript");
-    });
-
-    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/settings.html", "text/html");
     });
 
     //  ______    __    __                 _
@@ -397,6 +376,12 @@ void setup() {
                     red = request->getParam("red", true)->value().toInt();
                     green = request->getParam("green", true)->value().toInt();
                     blue = request->getParam("blue", true)->value().toInt();
+                    Serial.print("Rot: ");
+                    Serial.println(red);
+                    Serial.print("Grün: ");
+                    Serial.println(green);
+                    Serial.print("Blau: ");
+                    Serial.println(blue);
                     // Enable new effect
                     setActive(EFFECT_COLOR);
                     fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
@@ -511,34 +496,21 @@ void setup() {
             } else {
                 request->send(200, "text/plain", "Error unknown settings type");
             }
-        } else if (request->hasParam("setNumLeds", true)) {
+        } else if (request->hasParam("setNumLeds", true) && request->hasParam("setTheme", true)) {
             response = request->getParam("setNumLeds", true)->value();
+            Serial.print("Set NumLeds: ");
+            Serial.println(response);
             File file = SPIFFS.open("/settings/numLeds.txt", "w");
             file.print(response);
-            request->send(200, "text/plain", response);
+
+            response = request->getParam("setTheme", true)->value();
+            Serial.print("Set Theme: ");
+            Serial.println(response);
+            file = SPIFFS.open("/settings/Theme.txt", "w");
+            file.print(response);
+            request->send(200, "text/plain", "Settings saved!");
         } else if (request->hasParam("restart", true)) {
             ESP.restart();
-        } else {
-            request->send(200, "text/plain", "Error! No parameters found.");
-        }
-    });
-
-    // music functionality
-    server.on("/music", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("weAreNumberOne", true)) {  // We are number one
-            response = request->getParam("weAreNumberOne", true)->value();
-            if (response == "true") {
-                // Start playing music
-                setMusic(MUSIC_WE_ARE_NUMBER_ONE);
-                request->send(200, "text/plain", response);
-            } else if (response = "false") {
-                // Disable music
-                setMusic(MUSIC_DISABLE);
-                noTone(15);
-                request->send(200, "text/plain", response);
-            } else {
-                request->send(200, "text/plain", "Error! Invalid parameter. (weAreNumberOne)");
-            }
         } else {
             request->send(200, "text/plain", "Error! No parameters found.");
         }
@@ -555,38 +527,20 @@ void setup() {
 
     // this is for synchronizing the buttons on multiple devices
     server.on("/sync", HTTP_GET, [](AsyncWebServerRequest* requestSync) {
-        json = "[";
-        if (lightActive == true) {
-            json += "\"true\"";
-        } else {
-            json += "\"false\"";
-        }
-        if (colorActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (rainbowActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (fireActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (randomActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (weAreNumberOneActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        json += "]";
+        DynamicJsonDocument doc(1024);
+
+        doc[0] = lightActive;
+        doc[1]["acitve"] = colorActive;
+        doc[1]["red"] = leds[1].r;
+        doc[1]["green"] = leds[1].g;
+        doc[1]["blue"] = leds[1].b;
+        doc[2] = rainbowActive;
+        doc[3] = fireActive;
+        doc[4] = randomActive;
+
+        json = "";
+        serializeJson(doc, json);
+
         requestSync->send(200, "application/json", json);
     });
 
@@ -628,12 +582,6 @@ void handleAsync() {
             onMessage();
             FastLED.show();
             nextShow = millis() + 25;
-        }
-    }
-    // Music
-    if (millis() >= nextPlay) {
-        if (weAreNumberOneActive == true) {
-            playWeAreNumberOne();
         }
     }
 }

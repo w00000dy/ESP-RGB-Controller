@@ -129,6 +129,8 @@ function sync() {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             var data = JSON.parse(xhr.response);
+            console.log(data);
+            console.log(data.length);
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
                 if (element == "true") {
@@ -138,7 +140,7 @@ function sync() {
                     document.getElementById('switch' + String(index)).checked = false;
                 }
             }
-            setTimeout(sync, 1000);
+            setTimeout(sync, 5000);
         }
     }
     xhr.send();

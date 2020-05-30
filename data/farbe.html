@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <title>RGB Steuerungsseite farbe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="css/port.css">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <h1>Farbe wählen</h1>
+
+    <button style="color:red" class="button1" onclick="setspeicher(1); setColor(255,0,0);">Rot</button>
+    <br>
+    <button style="color: blue;" class="button1" onclick="setspeicher(2); setColor(0,0,255);">Blau</button>
+    <br>
+    <button style="color: white;" class="button1" onclick="setspeicher(3); setColor(255,255,255);">Weiß</button>
+    <br>
+    <button style="color:green" class="button1" onclick="setspeicher(4);setColor(0,255,0);"> Grün</button>
+    <br>
+    <button style="color:yellow;" class="button1" onclick="setspeicher(5); setColor(255, 255, 0);">Gelb</button>
+    <br>
+    <button style="color:aqua;" class="button1" onclick="setspeicher(6); setColor(0, 255, 255);">Cyan</button>
+    <br>
+    <button style="color:Purple;" class="button1" onclick="window.location='/';">Zurück zur Hautseite</button>
+    <br>
+    <button style="color: grey ;" class="button1" onclick="setspeicher(0);setColor(0, 0, 0);">Aus</button>
+
+    <script src="js/abfragen2.js"></script>
+</body>

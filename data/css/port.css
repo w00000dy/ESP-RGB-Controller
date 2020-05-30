@@ -1,0 +1,95 @@
+.colorchangeFast {
+    animation: colorchangeFast 10s infinite;
+}
+
+@keyframes colorchangeFast {
+    0% {
+        color: red;
+    }
+
+    15% {
+        color: orange;
+    }
+
+    20% {
+        color: yellow;
+    }
+
+    45% {
+        color: green;
+    }
+
+    60% {
+        color: turquoise;
+    }
+
+    75% {
+        color: blue;
+    }
+
+    90% {
+        color: purple;
+    }
+
+    100% {
+        color: red;
+    }
+}
+
+button {
+    margin: auto;
+    display: block;
+
+    font-size: 25px;
+    padding: 15px 32px;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+
+}
+
+.button1:hover {
+    background-color: currentColor;
+}
+
+p
+{
+    font-size: 25px;
+    text-align: center;
+    
+}
+
+h1 {
+    text-align: center;
+    
+}
+
+.dark-mode {
+    background: black;
+    background-color: black;
+    color: white;
+}
+
+.mytest {
+    margin: auto;
+    padding: 15px 32px;
+    font-size: 25px;
+    text-align: center;
+}
+
+select {
+    margin: auto;
+    padding: 15px 32px;
+    font-size: 25px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+input {
+    margin: auto;
+    display: block;
+    text-align: center;
+    font-size: 25px;
+    padding: 15px 32px;
+    border-radius: 8px;
+    transition-duration: 0.4s;
+}

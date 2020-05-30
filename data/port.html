@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <title>RGB Steuerungsindexseite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="css/port.css">
+    <link type="text/css" rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@900" rel="stylesheet">
+</head>
+<body>
+    <h1>Bereich wählen</h1>
+    <br>
+    <button class="button1" style="color: aqua;" onclick="window.location='/Farben'">Farben</button>
+    <br>
+    <button class="button1, colorchangeFast" onclick="window.location='/Modi'">Modis</button>
+    <br>
+    <h1>Aussehen der Website wählen</h1>
+    <br>
+    <div class="mytest">
+
+        <select id="farbeweb" size="2">
+            <option value="weiss">Weiß</option>
+            <option value="schwarz">Schwarz</option>
+        </select>
+        <input value="Modus ändern" type="button" onclick="setCookie()" id="pommes">
+    </div>
+    <h1></h1>
+    <p id="dings"></p>
+    <a href="/settings"><i class="material-icons settings">settings</i></a>
+
+    <script src="/js/abfragen.js"></script>
+    <script src="/js/aendern.js"></script>
+
+</body>
+</html>
