@@ -45,7 +45,6 @@ bool rainbowActive = false;
 bool fireActive = false;
 bool randomActive = false;
 bool notificationMessage = false;
-bool weAreNumberOneActive = false;
 String response;
 String json;
 int websitewahl;
