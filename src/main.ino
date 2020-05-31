@@ -14,7 +14,6 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
-#include <FS.h>
 #include <FastLED.h>
 
 #define MAX_LEDS 1024
@@ -248,6 +247,7 @@ void setup() {
         File file = SPIFFS.open("/settings/Theme.txt", "w");
         file.print(0);
     }
+
     Serial.print("NUM_LEDS: ");
     Serial.println(NUM_LEDS);
     // Set hostname from chipId
@@ -272,8 +272,6 @@ void setup() {
     // OTA
     ArduinoOTA.setHostname(HOSTNAME);
     ArduinoOTA.begin();
-
-    SPIFFS.begin();  // mount filesystem
 
     // __          __         _             _   _
     // \ \        / /        | |           (_) | |
@@ -300,7 +298,7 @@ void setup() {
             request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
         });
 
-    // Port Theme
+        // Port Theme
     } else if (websitewahl == 1) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/port.html", "text/html");
