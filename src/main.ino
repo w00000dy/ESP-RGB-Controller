@@ -9,9 +9,6 @@
 
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
 #include <FastLED.h>
@@ -45,8 +42,6 @@ bool fireActive = false;
 bool randomActive = false;
 bool notificationMessage = false;
 String response;
-String json;
-int websitewahl;
 CRGB leds[MAX_LEDS];
 AsyncWebServer server(80);
 DNSServer dnsServer;
@@ -97,6 +92,8 @@ void setActive(int8 effect) {
             break;
 
         default:
+            FastLED.clear();
+            FastLED.show();
             Serial.println("Disable all effects");
             break;
     }
@@ -191,6 +188,7 @@ void randomLED() {
     FastLED.show();
 }
 
+// notification message effect
 void onMessage() {
     if (count >= 44) {
         leds[0] = CRGB::Black;
@@ -219,37 +217,35 @@ void notFound(AsyncWebServerRequest* request) {
 
 void setup() {
     Serial.begin(9600);
-    delay(3000);
-    Serial.println(NUM_LEDS);
+    delay(2000);
     SPIFFS.begin();  // mount filesystem
     if (SPIFFS.exists("/settings/numLeds.txt") == true) {
         File file = SPIFFS.open("/settings/numLeds.txt", "r");
         String data = file.readString();
         NUM_LEDS = data.toInt();
         Serial.println("Settings found.");
-        Serial.print("numLeds: ");
-        Serial.println(data);
     } else {
-        Serial.println("No settings found. Generating files...");
+        Serial.println("No numLeds.txt file found. Generating file...");
         File file = SPIFFS.open("/settings/numLeds.txt", "w");
         file.print(25);
         NUM_LEDS = 25;
     }
-    if (SPIFFS.exists("/settings/Theme.txt") == true) {
-        File file = SPIFFS.open("/settings/Theme.txt", "r");
+    uint8 theme;
+    if (SPIFFS.exists("/settings/theme.txt") == true) {
+        File file = SPIFFS.open("/settings/theme.txt", "r");
         String data = file.readString();
-        websitewahl = data.toInt();
+        theme = data.toInt();
         Serial.println("Settings found.");
-        Serial.print("Choice: ");
-        Serial.println(websitewahl);
     } else {
-        Serial.println("No settings found. Generating files...");
-        File file = SPIFFS.open("/settings/Theme.txt", "w");
-        file.print(0);
+        Serial.println("No theme.txt file found. Generating file...");
+        File file = SPIFFS.open("/settings/theme.txt", "w");
+        theme = 0;
     }
 
     Serial.print("NUM_LEDS: ");
     Serial.println(NUM_LEDS);
+    Serial.print("Theme: ");
+    Serial.println(theme);
     // Set hostname from chipId
     strcat(HOSTNAME, String(ESP.getChipId()).c_str());
     wifi_station_set_hostname(const_cast<char*>(HOSTNAME));
@@ -259,9 +255,8 @@ void setup() {
     // clear LEDs
     FastLED.clear();
     FastLED.show();
-    pinMode(15, OUTPUT);
-    Serial.println("");
     // Print IP Adress, Hostname and Chip-ID
+    Serial.println("");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
     Serial.print("Hostname: ");
@@ -281,7 +276,7 @@ void setup() {
     //     \/  \/      \___| |_.__/  |___/ |_|  \__|  \___|
 
     // Material Design Theme
-    if (websitewahl == 0) {
+    if (theme == 0) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/index.html", "text/html");
         });
@@ -299,7 +294,7 @@ void setup() {
         });
 
         // Port Theme
-    } else if (websitewahl == 1) {
+    } else if (theme == 1) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/port.html", "text/html");
         });
@@ -352,8 +347,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (light)");
@@ -363,8 +356,6 @@ void setup() {
             if (response == "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 if (request->hasParam("red", true) && request->hasParam("green", true) && request->hasParam("blue", true)) {
@@ -382,6 +373,8 @@ void setup() {
                     fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
                     FastLED.show();
                     request->send(200, "text/plain", response);
+                } else {
+                    request->send(200, "text/plain", "Error! Invalid parameter. (color)");
                 }
             }
         } else if (request->hasParam("rainbow", true)) {  // rainbow
@@ -393,8 +386,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (rainbow)");
@@ -408,8 +399,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (fire)");
@@ -423,8 +412,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (fire)");
@@ -443,10 +430,10 @@ void setup() {
 
     server.on("/api", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("json", true)) {
-            json = request->getParam("json", true)->value();
+            const String json = request->getParam("json", true)->value();
             Serial.print("JSON: ");
             Serial.println(json);
-            DynamicJsonDocument doc(1024);
+            StaticJsonDocument<256> doc;
             deserializeJson(doc, json);
             bool on = doc["on"];
             uint8 brightness = doc["brightness"];
@@ -462,8 +449,6 @@ void setup() {
             } else {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             }
             request->send(200, "text/plain", "ok ... success");
@@ -480,7 +465,7 @@ void setup() {
                 setActive(NOTIFICATION_MESSAGE);
                 request->send(200, "text/plain", "ok ... success");
             } else {
-                request->send(200, "text/plain", "Error unknown notification type");
+                request->send(200, "text/plain", "Error unknown notification type or notification message effect is already running");
             }
         } else if (request->hasParam("settings", true)) {
             response = request->getParam("settings", true)->value();
@@ -501,7 +486,7 @@ void setup() {
             response = request->getParam("setTheme", true)->value();
             Serial.print("Set Theme: ");
             Serial.println(response);
-            file = SPIFFS.open("/settings/Theme.txt", "w");
+            file = SPIFFS.open("/settings/theme.txt", "w");
             file.print(response);
             request->send(200, "text/plain", "Settings saved!");
         } else if (request->hasParam("restart", true)) {
@@ -522,18 +507,18 @@ void setup() {
 
     // this is for synchronizing the buttons on multiple devices
     server.on("/sync", HTTP_GET, [](AsyncWebServerRequest* requestSync) {
-        DynamicJsonDocument doc(1024);
+        StaticJsonDocument<256> doc;
 
-        doc[0] = lightActive;
-        doc[1]["active"] = colorActive;
-        doc[1]["red"] = leds[NUM_LEDS / 2].r;
-        doc[1]["green"] = leds[NUM_LEDS / 2].g;
-        doc[1]["blue"] = leds[NUM_LEDS / 2].b;
-        doc[2] = rainbowActive;
-        doc[3] = fireActive;
-        doc[4] = randomActive;
+        doc[EFFECT_LIGHT] = lightActive;
+        doc[EFFECT_COLOR]["active"] = colorActive;
+        doc[EFFECT_COLOR]["red"] = leds[NUM_LEDS / 2].r;
+        doc[EFFECT_COLOR]["green"] = leds[NUM_LEDS / 2].g;
+        doc[EFFECT_COLOR]["blue"] = leds[NUM_LEDS / 2].b;
+        doc[EFFECT_RAINBOW] = rainbowActive;
+        doc[EFFECT_FIRE] = fireActive;
+        doc[EFFECT_RANDOM] = randomActive;
 
-        json = "";
+        String json = "";
         serializeJson(doc, json);
 
         requestSync->send(200, "application/json", json);
