@@ -13,7 +13,8 @@ function light() {
 function color() {
     var value = document.getElementById("switch1").checked;
     if (value == true) {
-        value = document.getElementById("color").value;
+        document.getElementById("color").value = "#00ff00";
+        value = "#00ff00";
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", '/effect', true);
@@ -89,6 +90,14 @@ function hexToRgb(hex) {
     } : null;
 }
 
+function rgbToHex(r, g, b) {
+    function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
 // this is for synchronizing the buttons on multiple devices
 function getStatus() {
     var xhr = new XMLHttpRequest();
@@ -102,6 +111,8 @@ function getStatus() {
                 const element = data[index];
                 if (index == 1) {
                     document.getElementById('switch' + String(index)).checked = element.active;
+                    document.getElementById("color").value = rgbToHex(element.red, element.green, element.blue);
+                    
                 } else {
                     document.getElementById('switch' + String(index)).checked = element;
                 }

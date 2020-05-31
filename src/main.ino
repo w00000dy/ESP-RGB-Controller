@@ -530,9 +530,9 @@ void setup() {
 
         doc[0] = lightActive;
         doc[1]["active"] = colorActive;
-        doc[1]["red"] = leds[1].r;
-        doc[1]["green"] = leds[1].g;
-        doc[1]["blue"] = leds[1].b;
+        doc[1]["red"] = leds[NUM_LEDS/2].r;
+        doc[1]["green"] = leds[NUM_LEDS/2].g;
+        doc[1]["blue"] = leds[NUM_LEDS/2].b;
         doc[2] = rainbowActive;
         doc[3] = fireActive;
         doc[4] = randomActive;
