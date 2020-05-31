@@ -7,26 +7,25 @@ function sync() {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             var x = JSON.parse(xhr.response);
-            for (let index = 0; index < x.length; index++) {
-                const element = x[index];
-                if (x[1].acitve == "true") {
-                    var r = x[1].red;
-                    var g = x[1].green;
-                    var b = x[1].blue;
-                    aendern(r, g, b);
-                }
-                else if (x[2] == "true") {
-                    RGB();
-                }
-                else if (x[3] == "true") {
-                    Fire();
-                }
-                else if (x[4] == "true") {
-                    Random();
-                }
-
-
+            if (x[1].active == true) {
+                var r = x[1].red;
+                var g = x[1].green;
+                var b = x[1].blue;
+                aendern(r, g, b);
             }
+            else if (x[2] == true) {
+                RGB();
+            }
+            else if (x[3] == true) {
+                Fire();
+            }
+            else if (x[4] == true) {
+                var z = x[1].red;
+                var zz = x[1].green;
+                var zzz = x[1].blue;
+                aendern2(z, zz, zzz);
+            }
+
             setTimeout(sync, 1000);
         }
     }
@@ -63,7 +62,7 @@ function setEffect(effekt) {
         }
     }
     xhr.send(effekt);
-
+    
 }
 function aendern(r, g, b) {
     document.getElementById("dings").innerHTML = "Color";
@@ -77,18 +76,13 @@ function RGB() {
     document.getElementById("dings").classList.remove('Fire');
 
 }
-function Fire() {
-    document.getElementById("dings").innerHTML = "Fire";
-    document.getElementById("dings").classList.remove = 'colorchangeFast';
-    document.getElementById("dings").classList.add('Fire');
-
-
-}
-function Random() {
+function aendern2(r, g, b) {
     document.getElementById("dings").innerHTML = "Randome";
-    document.getElementById("dings").classList.remove = 'colorchangeFast';
-    document.getElementById("dings").style.color = "Lime";
+    document.getElementById("dings").style.color = "rgb(" + r + "," + g + "," + b + ")";
+    document.getElementById("dings").classList.remove('colorchangeFast');
     document.getElementById("dings").classList.remove('Fire');
 
 }
+
 //Methods caller
+sync();

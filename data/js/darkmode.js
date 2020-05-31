@@ -21,65 +21,59 @@ function anfang(y) {
     The darkmode is set through adding the elements to the class dark-mode.
 */
 function setSchwarz(x) {
-   if (x == 0){
-    document.body.classList.add("dark-mode");
-    var buttons = document.getElementsByTagName('button');
-    for (var i = 0; i < buttons.length; i++) {
-        var button = buttons[i];
-        button.classList.add("dark-mode");
+    if (x == 0) {
+        document.body.classList.add("dark-mode");
+        var buttons = document.getElementsByTagName('button');
+        for (var i = 0; i < buttons.length; i++) {
+            var button = buttons[i];
+            button.classList.add("dark-mode");
+        }
     }
-    var select = document.getElementById("farbeweb");
-    select.classList.add("dark-mode");
-    var input = document.getElementById("pommes");
-    input.classList.add("dark-mode");
-}
-/*
-    Its like getSchwarz with the diffrence that its used to set modi.html and farben.html into darkmode
-    without the select and input element.
-*/
-else if(x==1){
 
-    document.body.classList.add("dark-mode");
-    var buttons = document.getElementsByTagName('button');
-    for (var i = 0; i < buttons.length; i++) {
-        var button = buttons[i];
-        button.classList.add("dark-mode");
-    }
-}
+
+
 }
 /*
     It´s a Method to set a cookie with the input from the select element from Settings with the id "farbeweb".
-    The cookie expieres after 1000d. The cookie is samesite stric set.
+    The cookie expieres after 100 years. The cookie is samesite stric set.
 */
 function setCookie(modus) {
-    document.cookie = "darkmode=" + modus + "; max-age=86400000; samesite=strict; path=/";
+    document.cookie = "darkmode=" + modus + "; max-age=3153600000; samesite=strict; path=/";
 }
 /*
     It revertes the changes from getSchwarz through removeing them from the class dark-mode.
 */
 
 function setWeiss(x) {
-    if(x==0){
-    document.body.classList.remove("dark-mode");
-    var buttons = document.getElementsByTagName('button');
-    for (var i = 0; i < buttons.length; i++) {
-        var button = buttons[i];
-        button.classList.remove("dark-mode");
-    }
-    var select = document.getElementById("farbeweb");
-    select.classList.remove("dark-mode");
-    var input = document.getElementById("pommes");
-    input.classList.remove("dark-mode");
-}
-/*
-    Like Schawrz().
-*/
-else if(x==1){
-    document.body.classList.remove("dark-mode");
-    var buttons = document.getElementsByTagName('button');
-    for (var i = 0; i < buttons.length; i++) {
-        var button = buttons[i];
-        button.classList.remove("dark-mode");
+    if (x == 0) {
+        document.body.classList.remove("dark-mode");
+        var buttons = document.getElementsByTagName('button');
+        for (var i = 0; i < buttons.length; i++) {
+            var button = buttons[i];
+            button.classList.remove("dark-mode");
+        }
+
     }
 }
+
+function darkmode() {
+    if (document.cookie == "darkmode=true") {
+        document.body.classList.add("darkmode");
+        document.getElementsByTagName("input")[0].classList.add("darkmode");
+        document.getElementsByTagName("input")[1].classList.add("darkmode");
+        var lever = document.getElementsByClassName("lever");
+        for (let index = 0; index < lever.length; index++) {
+          const element = lever[index];
+           element.classList.add("darkmodeLever");
+        }
+    } else {
+        document.body.classList.remove("darkmode");
+        document.getElementsByTagName("input")[0].classList.remove("darkmode");
+        document.getElementsByTagName("input")[1].classList.remove("darkmode");
+        var lever = document.getElementsByClassName("lever");
+        for (let index = 0; index < lever.length; index++) {
+          const element = lever[index];
+           element.classList.remove("darkmodeLever");
+        }
+    }
 }
