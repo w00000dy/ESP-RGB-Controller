@@ -282,6 +282,7 @@ void setup() {
     //    \  /\  /    |  __/ | |_) | \__ \ | | | |_  |  __/
     //     \/  \/      \___| |_.__/  |___/ |_|  \__|  \___|
 
+    // Material Design Theme
     if (websitewahl == 0) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/index.html", "text/html");
@@ -299,6 +300,7 @@ void setup() {
             request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
         });
 
+    // Port Theme
     } else if (websitewahl == 1) {
         server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/port.html", "text/html");
@@ -312,16 +314,8 @@ void setup() {
             request->send(SPIFFS, "/modi.html", "text/html");
         });
 
-        server.on("/js/aendern.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-            request->send(SPIFFS, "/js/aendern.js", "text/javascript");
-        });
-
         server.on("/js/abfragen.js", HTTP_GET, [](AsyncWebServerRequest* request) {
             request->send(SPIFFS, "/js/abfragen.js", "text/javascript");
-        });
-
-        server.on("/js/abfragen2.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-            request->send(SPIFFS, "/js/abfragen2.js", "text/javascript");
         });
 
         server.on("/css/port.css", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -331,6 +325,10 @@ void setup() {
 
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/settings.html", "text/html");
+    });
+
+    server.on("/js/darkmode.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/js/darkmode.js", "text/javascript");
     });
 
     server.on("/css/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -530,9 +528,9 @@ void setup() {
 
         doc[0] = lightActive;
         doc[1]["active"] = colorActive;
-        doc[1]["red"] = leds[NUM_LEDS/2].r;
-        doc[1]["green"] = leds[NUM_LEDS/2].g;
-        doc[1]["blue"] = leds[NUM_LEDS/2].b;
+        doc[1]["red"] = leds[NUM_LEDS / 2].r;
+        doc[1]["green"] = leds[NUM_LEDS / 2].g;
+        doc[1]["blue"] = leds[NUM_LEDS / 2].b;
         doc[2] = rainbowActive;
         doc[3] = fireActive;
         doc[4] = randomActive;
@@ -544,7 +542,6 @@ void setup() {
     });
 
     server.onNotFound(notFound);
-
     server.begin();
 }
 
