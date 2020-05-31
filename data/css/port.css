@@ -1,5 +1,5 @@
 .Fire {
-    animation: Fire 10s infinite;
+    animation: Fire 3s infinite;
 }
 
 @keyframes Fire {
