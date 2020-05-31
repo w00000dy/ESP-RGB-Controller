@@ -7,7 +7,6 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 ## ⚙️ Features
 - Many different effects ✅
 - Web-GUI ✅
-- Buzzer support ✅
 - Asynchronous ✅
 - OTA-Updates ✅
 - API for better integration (e.g. Google Home) ✅
@@ -35,13 +34,6 @@ The following table shows how to connect your hardware.
 |:--------------:	|:----:	|:-------:	|
 |  WS2801 (Data) 	|  13  	|    D7   	|
 | WS2801 (Clock) 	|  14  	|    D5   	|
-|     Buzzer     	|  15  	|    D8   	|
-|    Button 1    	|  16  	|    D0   	|
-| Button 1 (LED) 	|   0  	|    D3   	|
-|    Button 2    	|   5  	|    D1   	|
-| Button 2 (LED) 	|   2  	|    D4   	|
-|    Button 3    	|   4  	|    D2   	|
-| Button 3 (LED) 	|  12  	|    D6   	|
 
 ## 📒 Used libraries
 - <a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a>
