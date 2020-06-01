@@ -38,10 +38,11 @@ The following table shows how to connect your hardware.
 | WS2801 (Clock) 	|  14  	|    D5   	|
 
 ## 📒 Used libraries
+- <a href="https://github.com/bblanchon/ArduinoJson">ArduinoJson</a>
+- <a href="https://github.com/jandrassy/ArduinoOTA">ArduinoOTA</a>
+- <a href="https://github.com/alanswx/ESPAsyncWiFiManager">AsyncWiFiManager</a>
 - <a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a>
 - <a href="https://github.com/FastLED/FastLED">FastLED</a>
-- <a href="https://github.com/alanswx/ESPAsyncWiFiManager">AsyncWiFiManager</a>
-- <a href="https://github.com/bblanchon/ArduinoJson">ArduinoJson</a>
 
 ## ✌️ Credits
 Thanks to all contributors and creators of the libraries that i used!
