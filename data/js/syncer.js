@@ -4,23 +4,17 @@ document.getElementById("color").addEventListener("change", colorChange); // Col
 document.getElementById("switch2").addEventListener("click", rainbow);  // Rainbow
 document.getElementById("switch3").addEventListener("click", fire); // Fire
 document.getElementById("switch4").addEventListener("click", random); // Random
-document.getElementById("switch5").addEventListener("click", weAreNumberOne); // We are number one
 
 function light() {
-    document.getElementById('switch1').checked = false;
-    document.getElementById('switch2').checked = false;
-    document.getElementById('switch3').checked = false;
     var value = document.getElementById("switch0").checked;
     sendData("light", value);
 }
 
 function color() {
-    document.getElementById('switch0').checked = false;
-    document.getElementById('switch2').checked = false;
-    document.getElementById('switch3').checked = false;
     var value = document.getElementById("switch1").checked;
     if (value == true) {
-        value = document.getElementById("color").value;
+        document.getElementById("color").value = "#00ff00";
+        value = "#00ff00";
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", '/effect', true);
@@ -28,7 +22,7 @@ function color() {
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         xhr.onreadystatechange = function () { // Call a function when the state changes.
             if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-                // Request finished. Do processing here.
+                getStatus();
             }
         }
         xhr.send("color=" + value + "&red=" + hexToRgb(value).r + "&green=" + hexToRgb(value).g + "&blue=" + hexToRgb(value).b);
@@ -49,7 +43,7 @@ function colorChange() {
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         xhr.onreadystatechange = function () { // Call a function when the state changes.
             if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-                // Request finished. Do processing here.
+                getStatus();
             }
         }
         xhr.send("color=" + value + "&red=" + hexToRgb(value).r + "&green=" + hexToRgb(value).g + "&blue=" + hexToRgb(value).b);
@@ -57,42 +51,18 @@ function colorChange() {
 }
 
 function rainbow() {
-    document.getElementById('switch0').checked = false;
-    document.getElementById('switch1').checked = false;
-    document.getElementById('switch3').checked = false;
     var value = document.getElementById("switch2").checked;
     sendData("rainbow", value);
 }
 
 function fire() {
-    document.getElementById('switch0').checked = false;
-    document.getElementById('switch1').checked = false;
-    document.getElementById('switch2').checked = false;
     var value = document.getElementById("switch3").checked;
     sendData("fire", value);
 }
 
 function random() {
-    document.getElementById('switch0').checked = false;
-    document.getElementById('switch1').checked = false;
-    document.getElementById('switch2').checked = false;
     var value = document.getElementById("switch4").checked;
     sendData("random", value);
-}
-
-function weAreNumberOne() {
-    var data = document.getElementById("switch5").checked;
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", '/music', true);
-    //Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            // Request finished. Do processing here.
-        }
-    }
-    xhr.send("weAreNumberOne=" + data);
 }
 
 function sendData(effect, data) {
@@ -104,7 +74,7 @@ function sendData(effect, data) {
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            // Request finished. Do processing here.
+            getStatus();
         }
     }
     xhr.send(effect + "=" + data);
@@ -120,8 +90,16 @@ function hexToRgb(hex) {
     } : null;
 }
 
+function rgbToHex(r, g, b) {
+    function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
 // this is for synchronizing the buttons on multiple devices
-function sync() {
+function getStatus() {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", '/sync', true);
     //Send the proper header information along with the request
@@ -131,17 +109,22 @@ function sync() {
             var data = JSON.parse(xhr.response);
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                if (element == "true") {
-                    document.getElementById('switch' + String(index)).checked = true;
-                }
-                else {
-                    document.getElementById('switch' + String(index)).checked = false;
+                if (index == 1) {
+                    document.getElementById('switch' + String(index)).checked = element.active;
+                    document.getElementById("color").value = rgbToHex(element.red, element.green, element.blue);
+
+                } else {
+                    document.getElementById('switch' + String(index)).checked = element;
                 }
             }
-            setTimeout(sync, 1000);
         }
     }
     xhr.send();
+}
+
+function sync() {
+    getStatus();
+    setTimeout(sync, 1000);
 }
 
 sync();

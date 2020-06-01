@@ -50,3 +50,29 @@
         transform: scale(1.5) rotate(360deg);
     }
 }
+
+.back{
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    font-size: 200%;
+    transition: transform 0.2s;
+}
+.back:hover {
+    transform: scale(1.5);
+}
+
+input[type="color"] {
+    padding: 0;
+    border: none;
+}
+
+.darkmode {
+    background: black;
+    background-color: black;
+    color: rgba(255,255,255,0.75) !important;
+}
+
+.darkmodeLever {
+    background-color: rgba(255,255,255,0.75) !important;
+}

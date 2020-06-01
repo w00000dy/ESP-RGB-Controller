@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@900" rel="stylesheet">
     <!--Import css-->
-    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link type="text/css" rel="stylesheet" href="css/style.css" media="screen" />
 
     <!--Let browser know website is optimized for mobile and utf8-->
@@ -15,10 +15,10 @@
 
     <!--Set title-->
     <title>RGB-Controller</title>
-
+    <script src="js/darkmode.js"></script>
     <script>
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", '/api', true);
+        xhr.open("GET", '/getSettings', true);
 
         //Send the proper header information along with the request
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -26,10 +26,20 @@
         xhr.onreadystatechange = function () { // Call a function when the state changes.
             if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
                 console.log(xhr.response);
-                document.getElementById("numLeds").value = xhr.response;
+                var data = JSON.parse(xhr.response);
+                document.getElementById("numLeds").value = data[0];
+                document.getElementById("theme").value = data[1];
+                M.AutoInit();
+                if (document.cookie == "darkmode=true") {
+                    document.getElementById("darkmode").checked = true;
+                }
+                else {
+                    document.getElementById("darkmode").checked = false;
+                }
+                darkmode();
             }
         }
-        xhr.send("settings=numLeds");
+        xhr.send();
     </script>
 </head>
 
@@ -38,44 +48,79 @@
         <h2 class="colorchange" style="text-align: center; font-family: 'Raleway'; font-weight: 900;">RGB-Controller
         </h2>
         <h5>Settings:</h5><br>
-            <table style="margin: auto;  width: auto;">
-                <tr>
-                    <td style="text-align: center;">Number of leds:</td>
-                    <td style="text-align: center;">
-                        <input type="number" id="numLeds" min="0" style="width: 100px;">
-                    </td>
-                </tr>
-            </table>
-            <br>
-            <button class="btn waves-effect waves-light" onclick="submit()">Save
-                <i class="material-icons right">send</i>
-            </button> 
-            <button class="btn waves-effect waves-light" onclick="restart()">Restart
-                <i class="material-icons right">autorenew</i>
-            </button>
+        <table style="margin: auto;  width: auto;">
+            <tr>
+                <td style="text-align: center;">Number of leds:</td>
+                <td style="text-align: center;">
+                    <input type="number" id="numLeds" min="0" style="width: 100px;">
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">Theme:</td>
+                <td style="text-align: center;">
+                    <div class="input-field col s12">
+                        <select id="theme">
+                            <option value="-1" disabled>Choose your theme</option>
+                            <option value="0">Material Design</option>
+                            <option value="1">Port Theme</option>
+                        </select>
+                        <label>Select Theme</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">Darkmode:</td>
+                <td style="text-align: center;">
+                    <!-- Switch -->
+                    <div class="switch">
+                        <label>
+                            Off
+                            <input type="checkbox" id="darkmode">
+                            <span class="lever"></span>
+                            On
+                        </label>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <br>
+        <button class="btn waves-effect waves-light" onclick="submit()">Save
+            <i class="material-icons right">send</i>
+        </button>
+        <button class="btn waves-effect waves-light" onclick="restart(); backHome()">Restart
+            <i class="material-icons right">autorenew</i>
+        </button>
+        <br><br>
+        <div id="countdown"></div>
     </div>
 
+    <a href="/"><i class="material-icons back">arrow_back</i></a>
+
     <!--JavaScript at end of body for optimized loading-->
-    <script src="js/materialize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
+        darkmode();
+        M.AutoInit();
+
         function submit() {
             var xhr = new XMLHttpRequest();
             var num = document.getElementById("numLeds").value;
-            xhr.open("POST", '/api', true);
+            var theme = document.getElementById("theme").value;
+            xhr.open("POST", '/setSettings', true);
 
             //Send the proper header information along with the request
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
             xhr.onreadystatechange = function () { // Call a function when the state changes.
                 if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-                    console.log(xhr.response);
-                    document.getElementById("numLeds").value = xhr.response;
-                    M.toast({html: 'Settings saved!'})
+                    setCookie(document.getElementById("darkmode").checked);
+                    darkmode();
+                    M.toast({ html: xhr.response })
                 }
             }
-            xhr.send("setNumLeds=" + num);
+            xhr.send("numLeds=" + num + "&theme=" + theme);
         }
-
+        var seconds = 10;
         function restart() {
             var xhr = new XMLHttpRequest();
             xhr.open("POST", '/api', true);
@@ -88,7 +133,18 @@
                 }
             }
             xhr.send("restart=true");
-            M.toast({html: "Device is restarting..."});
+            M.toast({ html: "Device is restarting..." });
+        }
+
+        function backHome() {
+            document.getElementById("countdown").innerHTML = "Redirect home in " + seconds + " seconds.";
+            if (seconds <= 0) {
+                location.href = "/";
+            }
+            else {
+                seconds = seconds - 1;
+                setTimeout(backHome, 1000);
+            }
         }
     </script>
 </body>

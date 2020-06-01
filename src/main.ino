@@ -9,12 +9,8 @@
 
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
-#include <FS.h>
 #include <FastLED.h>
 
 #define MAX_LEDS 1024
@@ -22,49 +18,12 @@
 #define CLOCK_PIN 14
 
 #define EFFECT_DISABLE -1
-#define MUSIC_DISABLE -2
 #define EFFECT_LIGHT 0
 #define EFFECT_COLOR 1
 #define EFFECT_RAINBOW 2
 #define EFFECT_FIRE 3
 #define EFFECT_RANDOM 4
 #define NOTIFICATION_MESSAGE 5
-#define MUSIC_WE_ARE_NUMBER_ONE 6
-
-const int fn = 400;
-const int hn = 200;
-const int qn = 100;
-const int f5 = 698;
-const int c6 = 1047;
-const int b5 = 988;
-const int gh5 = 831;
-const int ch6 = 1109;
-const int dh6 = 1245;
-
-int WeAreNumberOne[] = {
-    0, 0,
-    f5, fn + hn,
-    c6, hn,
-    b5, qn,
-    c6, qn,
-    b5, qn,
-    c6, qn,
-    b5, hn,
-    c6, hn,
-    gh5, fn,
-    f5, fn + hn,
-    f5, hn,
-    gh5, hn,
-    c6, hn,
-    ch6, fn,
-    gh5, fn,
-    ch6, fn,
-    dh6, fn,
-    c6, hn,
-    ch6, hn,
-    c6, hn,
-    ch6, hn,
-    c6, fn};
 
 uint8 x = 1;
 uint i = 0;
@@ -82,15 +41,34 @@ bool rainbowActive = false;
 bool fireActive = false;
 bool randomActive = false;
 bool notificationMessage = false;
-bool weAreNumberOneActive = false;
 String response;
-String json;
-
 CRGB leds[MAX_LEDS];
 AsyncWebServer server(80);
 DNSServer dnsServer;
 AsyncWiFiManager wifiManager(&server, &dnsServer);
 char HOSTNAME[] = "ESP-RGB-Controller-";
+
+void setSettings(uint16 numLeds, uint8 theme) {
+    StaticJsonDocument<64> doc;
+    doc.add(numLeds);
+    doc.add(theme);
+
+    String json;
+    serializeJson(doc, json);
+
+    Serial.println("Set settings");
+    Serial.println("JSON: " + json);
+
+    File file = SPIFFS.open("/settings.txt", "w");
+    file.print(json);
+}
+
+String getSettings() {
+    Serial.println("Read settings.txt");
+    File file = SPIFFS.open("/settings.txt", "r");
+    String json = file.readString();
+    return json;
+}
 
 // map-function for double
 double mapd(double x, double in_min, double in_max, double out_min, double out_max) {
@@ -136,6 +114,8 @@ void setActive(int8 effect) {
             break;
 
         default:
+            FastLED.clear();
+            FastLED.show();
             Serial.println("Disable all effects");
             break;
     }
@@ -156,20 +136,6 @@ int getActive() {
         return NOTIFICATION_MESSAGE;
     } else {
         return EFFECT_DISABLE;
-    }
-}
-
-void setMusic(int8 music) {
-    weAreNumberOneActive = false;
-    switch (music) {
-        case MUSIC_WE_ARE_NUMBER_ONE:
-            weAreNumberOneActive = true;
-            Serial.println("Playing we are numer one");
-            break;
-
-        default:
-            Serial.println("Disable music");
-            break;
     }
 }
 
@@ -244,19 +210,7 @@ void randomLED() {
     FastLED.show();
 }
 
-// asynchronous music
-void playWeAreNumberOne() {
-    if (i < (sizeof(WeAreNumberOne) / sizeof(int))) {
-        tone(15, WeAreNumberOne[i]);
-        nextPlay = millis() + WeAreNumberOne[i + 1];
-        i = i + 2;
-    } else {
-        noTone(15);
-        nextPlay = millis() + 1000;
-        i = 0;
-    }
-}
-
+// notification message effect
 void onMessage() {
     if (count >= 44) {
         leds[0] = CRGB::Black;
@@ -285,24 +239,29 @@ void notFound(AsyncWebServerRequest* request) {
 
 void setup() {
     Serial.begin(9600);
-    delay(3000);
-    Serial.println(NUM_LEDS);
+    delay(2000);
     SPIFFS.begin();  // mount filesystem
-    if (SPIFFS.exists("/settings/numLeds.txt") == true) {
-        File file = SPIFFS.open("/settings/numLeds.txt", "r");
-        String data = file.readString();
-        NUM_LEDS = data.toInt();
+    uint8 theme;
+    if (SPIFFS.exists("/settings.txt") == true) {
+        String json = getSettings();
+        StaticJsonDocument<64> doc;
+        deserializeJson(doc, json);
+
+        NUM_LEDS = doc[0];
+        theme = doc[1];
+
         Serial.println("Settings found.");
-        Serial.print("numLeds: ");
-        Serial.println(data);
     } else {
-        Serial.println("No settings found. Generating files...");
-        File file = SPIFFS.open("/settings/numLeds.txt", "w");
-        file.print(25);
+        Serial.println("No numLeds.txt file found. Generating file...");
         NUM_LEDS = 25;
+        theme = 0;
+        setSettings(NUM_LEDS, theme);
     }
+
     Serial.print("NUM_LEDS: ");
     Serial.println(NUM_LEDS);
+    Serial.print("Theme: ");
+    Serial.println(theme);
     // Set hostname from chipId
     strcat(HOSTNAME, String(ESP.getChipId()).c_str());
     wifi_station_set_hostname(const_cast<char*>(HOSTNAME));
@@ -312,9 +271,8 @@ void setup() {
     // clear LEDs
     FastLED.clear();
     FastLED.show();
-    pinMode(15, OUTPUT);
-    Serial.println("");
     // Print IP Adress, Hostname and Chip-ID
+    Serial.println("");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
     Serial.print("Hostname: ");
@@ -326,8 +284,6 @@ void setup() {
     ArduinoOTA.setHostname(HOSTNAME);
     ArduinoOTA.begin();
 
-    SPIFFS.begin();  // mount filesystem
-
     // __          __         _             _   _
     // \ \        / /        | |           (_) | |
     //  \ \  /\  / /    ___  | |__    ___   _  | |_    ___
@@ -335,28 +291,57 @@ void setup() {
     //    \  /\  /    |  __/ | |_) | \__ \ | | | |_  |  __/
     //     \/  \/      \___| |_.__/  |___/ |_|  \__|  \___|
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/index.html", "text/html");
+    // Material Design Theme
+    if (theme == 0) {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/index.html", "text/html");
+        });
+
+        server.on("/css/materialize.min.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/css/materialize.min.css", "text/css");
+        });
+
+        server.on("/js/syncer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/syncer.js", "text/javascript");
+        });
+
+        server.on("/js/materialize.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
+        });
+
+        // Port Theme
+    } else if (theme == 1) {
+        server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/port.html", "text/html");
+        });
+
+        server.on("/Farben", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/farbe.html", "text/html");
+        });
+
+        server.on("/Modi", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/modi.html", "text/html");
+        });
+
+        server.on("/js/abfragen.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/js/abfragen.js", "text/javascript");
+        });
+
+        server.on("/css/port.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+            request->send(SPIFFS, "/css/port.css", "text/css");
+        });
+    }
+
+    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/settings.html", "text/html");
     });
 
-    server.on("/css/materialize.min.css", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/css/materialize.min.css", "text/css");
+    server.on("/js/darkmode.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/js/darkmode.js", "text/javascript");
     });
 
     server.on("/css/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/css/style.css", "text/css");
-    });
-
-    server.on("/js/materialize.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/js/materialize.min.js", "text/javascript");
-    });
-
-    server.on("/js/syncer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/js/syncer.js", "text/javascript");
-    });
-
-    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/settings.html", "text/html");
     });
 
     //  ______    __    __                 _
@@ -378,8 +363,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (light)");
@@ -389,19 +372,25 @@ void setup() {
             if (response == "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 if (request->hasParam("red", true) && request->hasParam("green", true) && request->hasParam("blue", true)) {
                     red = request->getParam("red", true)->value().toInt();
                     green = request->getParam("green", true)->value().toInt();
                     blue = request->getParam("blue", true)->value().toInt();
+                    Serial.print("Rot: ");
+                    Serial.println(red);
+                    Serial.print("Grün: ");
+                    Serial.println(green);
+                    Serial.print("Blau: ");
+                    Serial.println(blue);
                     // Enable new effect
                     setActive(EFFECT_COLOR);
                     fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
                     FastLED.show();
                     request->send(200, "text/plain", response);
+                } else {
+                    request->send(200, "text/plain", "Error! Invalid parameter. (color)");
                 }
             }
         } else if (request->hasParam("rainbow", true)) {  // rainbow
@@ -413,8 +402,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (rainbow)");
@@ -428,8 +415,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (fire)");
@@ -443,8 +428,6 @@ void setup() {
             } else if (response = "false") {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             } else {
                 request->send(200, "text/plain", "Error! Invalid parameter. (fire)");
@@ -452,6 +435,31 @@ void setup() {
         } else {
             request->send(200, "text/plain", "Error! No parameters found.");
         }
+    });
+
+    //   _____          _     _     _
+    //  / ____|        | |   | |   (_)
+    // | (___     ___  | |_  | |_   _   _ __     __ _   ___
+    //  \___ \   / _ \ | __| | __| | | | '_ \   / _` | / __|
+    //  ____) | |  __/ | |_  | |_  | | | | | | | (_| | \__ \
+    // |_____/   \___|  \__|  \__| |_| |_| |_|  \__, | |___/
+    //                                           __/ |
+    //                                          |___/
+
+    server.on("/setSettings", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("numLeds", true) && request->hasParam("theme", true)) {
+            uint16 numLeds = request->getParam("numLeds", true)->value().toInt();
+            uint8 theme = request->getParam("theme", true)->value().toInt();
+            setSettings(numLeds, theme);
+            request->send(200, "text/plain", "Settings saved!");
+        } else {
+            request->send(200, "text/plain", "Error unknown setSettings type");
+        }
+    });
+
+    server.on("/getSettings", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String json = getSettings();
+        request->send(200, "application/json", json);
     });
 
     //             _____    _____
@@ -463,10 +471,10 @@ void setup() {
 
     server.on("/api", HTTP_POST, [](AsyncWebServerRequest* request) {
         if (request->hasParam("json", true)) {
-            json = request->getParam("json", true)->value();
+            const String json = request->getParam("json", true)->value();
             Serial.print("JSON: ");
             Serial.println(json);
-            DynamicJsonDocument doc(1024);
+            StaticJsonDocument<256> doc;
             deserializeJson(doc, json);
             bool on = doc["on"];
             uint8 brightness = doc["brightness"];
@@ -482,8 +490,6 @@ void setup() {
             } else {
                 // Disable effect
                 setActive(EFFECT_DISABLE);
-                FastLED.clear();
-                FastLED.show();
                 request->send(200, "text/plain", response);
             }
             request->send(200, "text/plain", "ok ... success");
@@ -500,45 +506,10 @@ void setup() {
                 setActive(NOTIFICATION_MESSAGE);
                 request->send(200, "text/plain", "ok ... success");
             } else {
-                request->send(200, "text/plain", "Error unknown notification type");
+                request->send(200, "text/plain", "Error unknown notification type or notification message effect is already running");
             }
-        } else if (request->hasParam("settings", true)) {
-            response = request->getParam("settings", true)->value();
-            if (response == "numLeds") {
-                File file = SPIFFS.open("/settings/numLeds.txt", "r");
-                String data = file.readString();
-                request->send(200, "text/plain", data);
-            } else {
-                request->send(200, "text/plain", "Error unknown settings type");
-            }
-        } else if (request->hasParam("setNumLeds", true)) {
-            response = request->getParam("setNumLeds", true)->value();
-            File file = SPIFFS.open("/settings/numLeds.txt", "w");
-            file.print(response);
-            request->send(200, "text/plain", response);
         } else if (request->hasParam("restart", true)) {
             ESP.restart();
-        } else {
-            request->send(200, "text/plain", "Error! No parameters found.");
-        }
-    });
-
-    // music functionality
-    server.on("/music", HTTP_POST, [](AsyncWebServerRequest* request) {
-        if (request->hasParam("weAreNumberOne", true)) {  // We are number one
-            response = request->getParam("weAreNumberOne", true)->value();
-            if (response == "true") {
-                // Start playing music
-                setMusic(MUSIC_WE_ARE_NUMBER_ONE);
-                request->send(200, "text/plain", response);
-            } else if (response = "false") {
-                // Disable music
-                setMusic(MUSIC_DISABLE);
-                noTone(15);
-                request->send(200, "text/plain", response);
-            } else {
-                request->send(200, "text/plain", "Error! Invalid parameter. (weAreNumberOne)");
-            }
         } else {
             request->send(200, "text/plain", "Error! No parameters found.");
         }
@@ -555,43 +526,24 @@ void setup() {
 
     // this is for synchronizing the buttons on multiple devices
     server.on("/sync", HTTP_GET, [](AsyncWebServerRequest* requestSync) {
-        json = "[";
-        if (lightActive == true) {
-            json += "\"true\"";
-        } else {
-            json += "\"false\"";
-        }
-        if (colorActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (rainbowActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (fireActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (randomActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        if (weAreNumberOneActive == true) {
-            json += ",\"true\"";
-        } else {
-            json += ",\"false\"";
-        }
-        json += "]";
+        StaticJsonDocument<256> doc;
+
+        doc[EFFECT_LIGHT] = lightActive;
+        doc[EFFECT_COLOR]["active"] = colorActive;
+        doc[EFFECT_COLOR]["red"] = leds[NUM_LEDS / 2].r;
+        doc[EFFECT_COLOR]["green"] = leds[NUM_LEDS / 2].g;
+        doc[EFFECT_COLOR]["blue"] = leds[NUM_LEDS / 2].b;
+        doc[EFFECT_RAINBOW] = rainbowActive;
+        doc[EFFECT_FIRE] = fireActive;
+        doc[EFFECT_RANDOM] = randomActive;
+
+        String json = "";
+        serializeJson(doc, json);
+
         requestSync->send(200, "application/json", json);
     });
 
     server.onNotFound(notFound);
-
     server.begin();
 }
 
@@ -628,12 +580,6 @@ void handleAsync() {
             onMessage();
             FastLED.show();
             nextShow = millis() + 25;
-        }
-    }
-    // Music
-    if (millis() >= nextPlay) {
-        if (weAreNumberOneActive == true) {
-            playWeAreNumberOne();
         }
     }
 }
