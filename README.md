@@ -7,6 +7,8 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 ## ⚙️ Features
 - Many different effects ✅
 - Web-GUI ✅
+- Darkmode ✅
+- Multiple Themes ✅
 - Asynchronous ✅
 - OTA-Updates ✅
 - API for better integration (e.g. Google Home) ✅
