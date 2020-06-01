@@ -22,7 +22,7 @@ This project is for controlling RGB-Strips (e.g. WS2801) using an ESP8266 board 
 - ESP32 boards ❔
 
 ## 🖼️ Images
-<img src="/images/iphone-xs-with-macbook-air-in-the-background.jpg" width="50%"><img src="/images/ipad-pro-on-white-table.jpg" width="50%">
+<img src="/images/iphone-xs-with-macbook-air-in-the-background.jpg" width="50%"><img src="/images/ipad-pro-on-white-table.jpg" width="50%"><img src="/images/apple-watch-on-yellow-background.jpg" width="50%"><img src="/images/bright-office-enviroment-with-macbook-air.jpg" width="50%">
 
 ## 📲 Installation
 You can find a full installation and setup guide in the <a href="https://github.com/WoodyLetsCode/ESP-RGB-Controller/wiki">Wiki</a>.
