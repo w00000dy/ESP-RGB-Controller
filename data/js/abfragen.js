@@ -83,6 +83,12 @@ function aendern2(r, g, b) {
     document.getElementById("dings").classList.remove('Fire');
 
 }
+function Fire()
+{
+    document.getElementById("dings").innerHTML = "Fire";
+    document.getElementById("dings").classList.remove('colorchangeFast');
+    document.getElementById("dings").classList.add('Fire');
+}
 
 //Methods caller
 sync();
