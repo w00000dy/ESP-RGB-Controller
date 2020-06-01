@@ -62,7 +62,7 @@ function setEffect(effekt) {
         }
     }
     xhr.send(effekt);
-    
+
 }
 function aendern(r, g, b) {
     document.getElementById("dings").innerHTML = "Color";

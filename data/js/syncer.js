@@ -112,7 +112,7 @@ function getStatus() {
                 if (index == 1) {
                     document.getElementById('switch' + String(index)).checked = element.active;
                     document.getElementById("color").value = rgbToHex(element.red, element.green, element.blue);
-                    
+
                 } else {
                     document.getElementById('switch' + String(index)).checked = element;
                 }

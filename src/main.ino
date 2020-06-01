@@ -48,6 +48,28 @@ DNSServer dnsServer;
 AsyncWiFiManager wifiManager(&server, &dnsServer);
 char HOSTNAME[] = "ESP-RGB-Controller-";
 
+void setSettings(uint16 numLeds, uint8 theme) {
+    StaticJsonDocument<64> doc;
+    doc.add(numLeds);
+    doc.add(theme);
+
+    String json;
+    serializeJson(doc, json);
+
+    Serial.println("Set settings");
+    Serial.println("JSON: " + json);
+
+    File file = SPIFFS.open("/settings.txt", "w");
+    file.print(json);
+}
+
+String getSettings() {
+    Serial.println("Read settings.txt");
+    File file = SPIFFS.open("/settings.txt", "r");
+    String json = file.readString();
+    return json;
+}
+
 // map-function for double
 double mapd(double x, double in_min, double in_max, double out_min, double out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -219,27 +241,21 @@ void setup() {
     Serial.begin(9600);
     delay(2000);
     SPIFFS.begin();  // mount filesystem
-    if (SPIFFS.exists("/settings/numLeds.txt") == true) {
-        File file = SPIFFS.open("/settings/numLeds.txt", "r");
-        String data = file.readString();
-        NUM_LEDS = data.toInt();
+    uint8 theme;
+    if (SPIFFS.exists("/settings.txt") == true) {
+        String json = getSettings();
+        StaticJsonDocument<64> doc;
+        deserializeJson(doc, json);
+
+        NUM_LEDS = doc[0];
+        theme = doc[1];
+
         Serial.println("Settings found.");
     } else {
         Serial.println("No numLeds.txt file found. Generating file...");
-        File file = SPIFFS.open("/settings/numLeds.txt", "w");
-        file.print(25);
         NUM_LEDS = 25;
-    }
-    uint8 theme;
-    if (SPIFFS.exists("/settings/theme.txt") == true) {
-        File file = SPIFFS.open("/settings/theme.txt", "r");
-        String data = file.readString();
-        theme = data.toInt();
-        Serial.println("Settings found.");
-    } else {
-        Serial.println("No theme.txt file found. Generating file...");
-        File file = SPIFFS.open("/settings/theme.txt", "w");
         theme = 0;
+        setSettings(NUM_LEDS, theme);
     }
 
     Serial.print("NUM_LEDS: ");
@@ -421,6 +437,31 @@ void setup() {
         }
     });
 
+    //   _____          _     _     _
+    //  / ____|        | |   | |   (_)
+    // | (___     ___  | |_  | |_   _   _ __     __ _   ___
+    //  \___ \   / _ \ | __| | __| | | | '_ \   / _` | / __|
+    //  ____) | |  __/ | |_  | |_  | | | | | | | (_| | \__ \
+    // |_____/   \___|  \__|  \__| |_| |_| |_|  \__, | |___/
+    //                                           __/ |
+    //                                          |___/
+
+    server.on("/setSettings", HTTP_POST, [](AsyncWebServerRequest* request) {
+        if (request->hasParam("numLeds", true) && request->hasParam("theme", true)) {
+            uint16 numLeds = request->getParam("numLeds", true)->value().toInt();
+            uint8 theme = request->getParam("theme", true)->value().toInt();
+            setSettings(numLeds, theme);
+            request->send(200, "text/plain", "Settings saved!");
+        } else {
+            request->send(200, "text/plain", "Error unknown setSettings type");
+        }
+    });
+
+    server.on("/getSettings", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String json = getSettings();
+        request->send(200, "application/json", json);
+    });
+
     //             _____    _____
     //     /\     |  __ \  |_   _|
     //    /  \    | |__) |   | |
@@ -467,28 +508,6 @@ void setup() {
             } else {
                 request->send(200, "text/plain", "Error unknown notification type or notification message effect is already running");
             }
-        } else if (request->hasParam("settings", true)) {
-            response = request->getParam("settings", true)->value();
-            if (response == "numLeds") {
-                File file = SPIFFS.open("/settings/numLeds.txt", "r");
-                String data = file.readString();
-                request->send(200, "text/plain", data);
-            } else {
-                request->send(200, "text/plain", "Error unknown settings type");
-            }
-        } else if (request->hasParam("setNumLeds", true) && request->hasParam("setTheme", true)) {
-            response = request->getParam("setNumLeds", true)->value();
-            Serial.print("Set NumLeds: ");
-            Serial.println(response);
-            File file = SPIFFS.open("/settings/numLeds.txt", "w");
-            file.print(response);
-
-            response = request->getParam("setTheme", true)->value();
-            Serial.print("Set Theme: ");
-            Serial.println(response);
-            file = SPIFFS.open("/settings/theme.txt", "w");
-            file.print(response);
-            request->send(200, "text/plain", "Settings saved!");
         } else if (request->hasParam("restart", true)) {
             ESP.restart();
         } else {
